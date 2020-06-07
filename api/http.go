@@ -17,9 +17,8 @@ type server struct {
 	mw     []Middleware
 }
 
-// NewServer returns a HTTP server for accessing the account service.
-// The server implements http.Handler.
-func NewServer(logger *zap.SugaredLogger, a API) *server {
+// NewServer returns a HTTP server for accessing the the given API.
+func NewServer(logger *zap.SugaredLogger, a API, addr string) http.Server {
 	router := httprouter.New()
 	router.HandleOPTIONS = true
 
@@ -34,7 +33,10 @@ func NewServer(logger *zap.SugaredLogger, a API) *server {
 		s.handle(e.Method, e.Path, e.Handler)
 	}
 
-	return &s
+	return http.Server{
+		Addr:    addr,
+		Handler: &s,
+	}
 }
 
 func (s *server) handle(method, path string, handler http.Handler) {
@@ -78,10 +80,10 @@ func Respond(w http.ResponseWriter, r *http.Request, status int, data interface{
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if data != nil {
-		err := json.NewEncoder(w).Encode(data)
-		if err != nil {
-			// TODO!
-			panic(err)
+		enc := json.NewEncoder(w)
+		err := enc.Encode(data)
+		if err == nil {
+			enc.Encode(map[string]string{"msg": "Internal Server Error"})
 		}
 	}
 }
