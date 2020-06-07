@@ -82,7 +82,7 @@ func Respond(w http.ResponseWriter, r *http.Request, status int, data interface{
 	if data != nil {
 		enc := json.NewEncoder(w)
 		err := enc.Encode(data)
-		if err == nil {
+		if err != nil {
 			enc.Encode(map[string]string{"msg": "Internal Server Error"})
 		}
 	}
