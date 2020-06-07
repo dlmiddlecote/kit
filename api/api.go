@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-type Endpointer interface {
+type API interface {
 	Endpoints() []Endpoint
 }
 
