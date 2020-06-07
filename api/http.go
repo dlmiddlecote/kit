@@ -19,7 +19,7 @@ type server struct {
 
 // NewServer returns a HTTP server for accessing the account service.
 // The server implements http.Handler.
-func NewServer(logger *zap.SugaredLogger, e Endpointer) *server {
+func NewServer(logger *zap.SugaredLogger, a API) *server {
 	router := httprouter.New()
 	router.HandleOPTIONS = true
 
@@ -30,7 +30,7 @@ func NewServer(logger *zap.SugaredLogger, e Endpointer) *server {
 	}
 
 	// initialise server router
-	for _, e := range e.Endpoints() {
+	for _, e := range a.Endpoints() {
 		s.handle(e.Method, e.Path, e.Handler)
 	}
 
