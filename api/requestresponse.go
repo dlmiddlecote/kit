@@ -11,14 +11,20 @@ import (
 // middlewares can access this value.
 func Respond(w http.ResponseWriter, r *http.Request, status int, data interface{}) {
 
+	var jsonData []byte
+	var err error
+
 	// If we have data to respond with, encode it into JSON, and set the correct
 	// header. If we cannot encode, we'll return an Internal Server Error.
 	if data != nil {
+		// Set the correct header
 		w.Header().Set("Content-Type", "application/json")
-		enc := json.NewEncoder(w)
-		err := enc.Encode(data)
+
+		// Marshal data into byte array
+		jsonData, err = json.Marshal(data)
 		if err != nil {
-			enc.Encode(map[string]string{"msg": "Internal Server Error"})
+			// There was an error Marshalling, so return a server error
+			jsonData = []byte(`{"msg": "Internal Server Error"}`)
 			status = http.StatusInternalServerError
 		}
 	}
@@ -30,4 +36,9 @@ func Respond(w http.ResponseWriter, r *http.Request, status int, data interface{
 
 	// Set the status code of the response. This should be the last header to be written.
 	w.WriteHeader(status)
+
+	// Write the JSON body. This must be done last, otherwise we flush the response too quickly.
+	if len(jsonData) > 0 {
+		w.Write(jsonData)
+	}
 }
