@@ -10,7 +10,7 @@ import (
 
 // MetricsMW returns a middleware that implements counting + timing of requests
 // using a Prometheus Histogram
-func MetricsMW() Middleware {
+func MetricsMW(endpoints []Endpoint) Middleware {
 	// Create Histogram that will observe request latency.
 	// This Histogram will also expose a 'count' metric that can be used
 	// to rate requests.
@@ -19,6 +19,14 @@ func MetricsMW() Middleware {
 		Help:    "HTTP Latency distributions",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"method", "path", "status"})
+
+	// Predeclare metrics to alleviate existential issues
+	// See: https://www.robustperception.io/existential-issues-with-metrics
+	for _, e := range endpoints {
+		for _, status := range []string{"2XX", "3XX", "4XX", "5XX"} {
+			duration.WithLabelValues(e.Method, e.Path, status)
+		}
+	}
 
 	// Register the Histogram to be exposed via the Prometheus metrics handler
 	prometheus.MustRegister(duration)
