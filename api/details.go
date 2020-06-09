@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 // ctxKey represents the type of value for the context key
@@ -17,6 +19,7 @@ type Details struct {
 	RequestID   string
 	Method      string
 	RequestPath string
+	Params      httprouter.Params
 	StatusCode  int
 }
 
@@ -27,4 +30,13 @@ func getDetails(r *http.Request) *Details {
 		return nil
 	}
 	return v
+}
+
+// URLParam returns the named parameter from the request's URL path.
+func URLParam(r *http.Request, name string) string {
+	d := getDetails(r)
+	if d == nil {
+		return ""
+	}
+	return d.Params.ByName(name)
 }

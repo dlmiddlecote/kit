@@ -50,7 +50,7 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 	handler = wrapMiddleware(s.mw, handler)
 
 	// Create the function to execute for each request
-	h := func(w http.ResponseWriter, r *http.Request) {
+	h := func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		ctx := r.Context()
 
 		// Set the context with the required details to process the request
@@ -59,6 +59,7 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 			RequestID:   ksuid.New().String(), // TODO: Get from request to add some request tracing.
 			Method:      method,
 			RequestPath: path,
+			Params:      params,
 		}
 
 		// Add details to the context, so other functions can access them.
@@ -69,7 +70,7 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 	}
 
 	// Register the handler to the router
-	s.router.HandlerFunc(method, path, h)
+	s.router.Handle(method, path, h)
 }
 
 // ServeHTTP implements http.Handler
