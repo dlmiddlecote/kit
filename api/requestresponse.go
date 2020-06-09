@@ -42,3 +42,9 @@ func Respond(w http.ResponseWriter, r *http.Request, status int, data interface{
 		w.Write(jsonData)
 	}
 }
+
+// Decode should be used to convert the request's JSON body into the given v value.
+func Decode(w http.ResponseWriter, r *http.Request, v interface{}) error {
+	// FUTURE: Can handle different content types by looking at the request headers.
+	return json.NewDecoder(r.Body).Decode(v)
+}
