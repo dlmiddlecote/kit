@@ -22,7 +22,10 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 	s := server{
 		router: httprouter.New(),
 		logger: logger,
-		mw:     []Middleware{LogMW(logger), MetricsMW()},
+		mw: []Middleware{
+			LogMW(logger),
+			MetricsMW(a.Endpoints()),
+		},
 	}
 
 	// Add all endpoints to the server's router
