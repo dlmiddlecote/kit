@@ -15,8 +15,8 @@ func MetricsMW(endpoints []Endpoint) Middleware {
 	// This Histogram will also expose a 'count' metric that can be used
 	// to rate requests.
 	duration := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "api_http_latency_seconds",
-		Help:    "HTTP Latency distributions",
+		Name:    "http_request_duration_seconds",
+		Help:    "HTTP Request Duration",
 		Buckets: prometheus.DefBuckets,
 	}, []string{"method", "path", "status"})
 
