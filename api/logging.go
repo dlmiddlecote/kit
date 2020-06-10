@@ -23,7 +23,7 @@ func LogMW(logger *zap.SugaredLogger) Middleware {
 				logger.Infow("request",
 					"request_id", d.RequestID,
 					"method", d.Method,
-					"path", d.RequestPath,
+					"path", r.URL.Path,
 					"status", d.StatusCode,
 					"duration", time.Since(d.Now),
 				)
