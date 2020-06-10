@@ -33,9 +33,6 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 		s.handle(e.Method, e.Path, e.Handler, e.Middlewares...)
 	}
 
-	// Add our not found handler to the router
-	s.router.NotFound = s.notfound()
-
 	// Convert our server into a http.Server
 	return http.Server{
 		Addr:    addr,
@@ -79,8 +76,4 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 // ServeHTTP implements http.Handler
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
-}
-
-func (s *server) notfound() http.Handler {
-	return http.NotFoundHandler()
 }
