@@ -10,6 +10,46 @@ import (
 	"go.uber.org/zap"
 )
 
+type Option func(*server)
+
+func OptionsHandler(h http.Handler) Option {
+	return func(s *server) {
+		s.router.GlobalOPTIONS = h
+		s.router.HandleOPTIONS = true
+	}
+}
+
+func NotFoundHandler(h http.Handler) Option {
+	return func(s *server) {
+		s.router.NotFound = h
+	}
+}
+
+func MethodNotAllowedHandler(h http.Handler) Option {
+	return func(s *server) {
+		s.router.MethodNotAllowed = h
+		s.router.HandleMethodNotAllowed = true
+	}
+}
+
+func PanicHandler(h func(http.ResponseWriter, *http.Request, interface{})) Option {
+	return func(s *server) {
+		s.router.PanicHandler = h
+	}
+}
+
+func RedirectTrailingSlash(b bool) Option {
+	return func(s *server) {
+		s.router.RedirectTrailingSlash = b
+	}
+}
+
+func WithMiddleware(mw ...Middleware) Option {
+	return func(s *server) {
+		s.mw = mw
+	}
+}
+
 type server struct {
 	router *httprouter.Router
 	logger *zap.SugaredLogger
@@ -17,7 +57,7 @@ type server struct {
 }
 
 // NewServer returns a HTTP server for accessing the the given API.
-func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
+func NewServer(addr string, logger *zap.SugaredLogger, a API, options ...Option) http.Server {
 	// Create our server, with default middlewares
 	s := server{
 		router: httprouter.New(),
@@ -31,6 +71,14 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 	// Add all endpoints to the server's router
 	for _, e := range a.Endpoints() {
 		s.handle(e.Method, e.Path, e.Handler, e.Middlewares...)
+	}
+
+	// Add our not found handler to the router
+	s.router.NotFound = s.notfound()
+
+	// Apply all specified options to the server
+	for _, o := range options {
+		o(&s)
 	}
 
 	// Convert our server into a http.Server
@@ -76,4 +124,13 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 // ServeHTTP implements http.Handler
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
+}
+
+func (s *server) notfound() http.Handler {
+	var h http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+
+		// Use the canonical not found handler.
+		http.NotFoundHandler().ServeHTTP(w, r)
+	}
+	return h
 }
