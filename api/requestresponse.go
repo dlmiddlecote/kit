@@ -98,7 +98,7 @@ func WithInstance(instance string) ProblemExtra {
 }
 
 // Problem responds to HTTP request with a response that follows RFC 7807 (https://tools.ietf.org/html/rfc7807).
-// It should be used for error 	responses.
+// It should be used for error responses.
 func Problem(w http.ResponseWriter, r *http.Request, title string, code int, extras ...ProblemExtra) {
 
 	response := problemResponse{
