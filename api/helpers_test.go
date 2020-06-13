@@ -3,6 +3,7 @@ package api
 import (
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
@@ -26,6 +27,9 @@ func newTestRequest(method, path string, body io.Reader) (*http.Request, error) 
 	if err != nil {
 		return nil, err
 	}
-	r = setDetails(r, path, httprouter.Params{})
+	r = setDetails(r, "/:path", httprouter.Params{httprouter.Param{
+		Key:   "path",
+		Value: strings.TrimLeft(path, "/"),
+	}})
 	return r, nil
 }
