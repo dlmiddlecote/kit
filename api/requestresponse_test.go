@@ -146,7 +146,7 @@ func TestNotFoundResponse(t *testing.T) {
 	d := getDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
-		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+		is.Equal(d.StatusCode, 404) // status is set on details.
 	}
 }
 
@@ -188,6 +188,6 @@ func TestErrorResponse(t *testing.T) {
 	d := getDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
-		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+		is.Equal(d.StatusCode, http.StatusInternalServerError) // status is set on details.
 	}
 }
