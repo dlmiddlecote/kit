@@ -1,10 +1,12 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/segmentio/ksuid"
 )
 
 // ctxKey represents the type of value for the context key
@@ -21,6 +23,23 @@ type Details struct {
 	RequestPath string
 	Params      httprouter.Params
 	StatusCode  int
+}
+
+// setDetails adds the required Details into the given request's context. The returned request should then be used.
+func setDetails(r *http.Request, path string, params httprouter.Params) *http.Request {
+
+	d := Details{
+		Now:         time.Now(),
+		RequestID:   ksuid.New().String(), // TODO: Get from request to add some request tracing.
+		Method:      r.Method,
+		RequestPath: path,
+		Params:      params,
+	}
+
+	// Add details to the context, so other functions can access them.
+	ctx := context.WithValue(r.Context(), KeyDetails, &d)
+
+	return r.WithContext(ctx)
 }
 
 // getDetails returns any Details found within the http.Request, or nil
