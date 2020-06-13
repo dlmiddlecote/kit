@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/matryer/is"
 	"go.uber.org/zap"
 )
@@ -32,11 +31,6 @@ func TestLogMW(t *testing.T) {
 	// Wrap handler in logging middleware.
 	h = mw(h)
 
-	// Create a router. Do this so that we can check the log line uses the requests path, not the routers path.
-	router := httprouter.New()
-	// Attach handler to router.
-	router.Handler("GET", "/:path", h)
-
 	// Create a dummy request to pass to our handler.
 	r, err := newTestRequest("GET", "/status", nil)
 	is.NoErr(err) // http request created ok.
@@ -45,7 +39,7 @@ func TestLogMW(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	// Invoke our handler.
-	router.ServeHTTP(rr, r)
+	h.ServeHTTP(rr, r)
 
 	// Check response is as expected.
 	is.Equal(rr.Code, http.StatusAccepted)                        // response status code is 202.
