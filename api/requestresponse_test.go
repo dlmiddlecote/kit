@@ -37,6 +37,8 @@ func TestProblemResponse(t *testing.T) {
 	// Check things.
 	is.Equal(rr.Code, http.StatusTeapot) // status code is teapot.
 
+	is.Equal(rr.Header().Get("Content-Type"), "application/problem+json") // content-type is correct.
+
 	type body struct {
 		Type   string `json:"type"`
 		Title  string `json:"title"`
@@ -74,6 +76,8 @@ func TestProblemResponseWithExtras(t *testing.T) {
 
 	// Check things.
 	is.Equal(rr.Code, http.StatusTeapot) // status code is teapot.
+
+	is.Equal(rr.Header().Get("Content-Type"), "application/problem+json") // content-type is correct.
 
 	type body struct {
 		Type     string `json:"type"`
@@ -117,6 +121,8 @@ func TestNotFoundResponse(t *testing.T) {
 	// Check things.
 	is.Equal(rr.Code, 404) // status code is correct.
 
+	is.Equal(rr.Header().Get("Content-Type"), "application/problem+json") // content-type is correct.
+
 	type body struct {
 		Type   string `json:"type"`
 		Title  string `json:"title"`
@@ -154,6 +160,8 @@ func TestErrorResponse(t *testing.T) {
 
 	// Check things.
 	is.Equal(rr.Code, http.StatusInternalServerError) // status code is correct.
+
+	is.Equal(rr.Header().Get("Content-Type"), "application/problem+json") // content-type is correct.
 
 	type body struct {
 		Type   string `json:"type"`
