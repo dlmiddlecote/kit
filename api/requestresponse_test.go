@@ -56,8 +56,10 @@ func TestProblemResponse(t *testing.T) {
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
 	d := getDetails(r)
-	is.True(d != nil)                         // details exist.
-	is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+	is.True(d != nil) // details exist.
+	if d != nil {
+		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+	}
 }
 
 func TestProblemResponseWithExtras(t *testing.T) {
@@ -100,8 +102,10 @@ func TestProblemResponseWithExtras(t *testing.T) {
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
 	d := getDetails(r)
-	is.True(d != nil)                         // details exist.
-	is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+	is.True(d != nil) // details exist.
+	if d != nil {
+		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+	}
 }
 
 func TestNotFoundResponse(t *testing.T) {
@@ -140,8 +144,10 @@ func TestNotFoundResponse(t *testing.T) {
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
 	d := getDetails(r)
-	is.True(d != nil)           // details exist.
-	is.Equal(d.StatusCode, 404) // status is set on details.
+	is.True(d != nil) // details exist.
+	if d != nil {
+		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+	}
 }
 
 func TestErrorResponse(t *testing.T) {
@@ -180,6 +186,8 @@ func TestErrorResponse(t *testing.T) {
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
 	d := getDetails(r)
-	is.True(d != nil)                                      // details exist.
-	is.Equal(d.StatusCode, http.StatusInternalServerError) // status is set on details.
+	is.True(d != nil) // details exist.
+	if d != nil {
+		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
+	}
 }
