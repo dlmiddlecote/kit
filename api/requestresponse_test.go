@@ -2,30 +2,19 @@ package api
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/matryer/is"
 )
-
-func newRequest(method, path string, body io.Reader) (*http.Request, error) {
-	r, err := http.NewRequest(method, path, body)
-	if err != nil {
-		return nil, err
-	}
-	r = setDetails(r, path, httprouter.Params{})
-	return r, nil
-}
 
 func TestProblemResponse(t *testing.T) {
 
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil)
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -69,7 +58,7 @@ func TestProblemResponseWithExtras(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil)
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -173,7 +162,7 @@ func TestNotFoundResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our not found response.
-	r, err := newRequest("GET", "/not-found", nil)
+	r, err := newTestRequest("GET", "/not-found", nil)
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -261,7 +250,7 @@ func TestErrorResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our error response.
-	r, err := newRequest("GET", "/error", nil)
+	r, err := newTestRequest("GET", "/error", nil)
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
