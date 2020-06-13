@@ -112,7 +112,7 @@ func TestNotFoundResponse(t *testing.T) {
 
 	is := is.New(t)
 
-	// Create a dummy request to pass to our problem response.
+	// Create a dummy request to pass to our not found response.
 	r, err := newRequest("GET", "/not-found", nil)
 	is.NoErr(err)
 
@@ -154,7 +154,7 @@ func TestErrorResponse(t *testing.T) {
 
 	is := is.New(t)
 
-	// Create a dummy request to pass to our problem response.
+	// Create a dummy request to pass to our error response.
 	r, err := newRequest("GET", "/error", nil)
 	is.NoErr(err)
 
