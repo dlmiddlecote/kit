@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/matryer/is"
@@ -17,7 +18,7 @@ func TestProblemResponse(t *testing.T) {
 	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with a problem.
@@ -61,7 +62,7 @@ func TestProblemResponseWithExtras(t *testing.T) {
 	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with a problem.
@@ -165,7 +166,7 @@ func TestNotFoundResponse(t *testing.T) {
 	r, err := newTestRequest("GET", "/not-found", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with not found.
@@ -253,7 +254,7 @@ func TestErrorResponse(t *testing.T) {
 	r, err := newTestRequest("GET", "/error", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with an error.
@@ -287,4 +288,67 @@ func TestErrorResponse(t *testing.T) {
 	if d != nil {
 		is.Equal(d.StatusCode, http.StatusInternalServerError) // status is set on details.
 	}
+}
+
+func TestDecode(t *testing.T) {
+
+	tests := []struct {
+		Name              string
+		Body              string
+		IsErr             bool
+		ExpectedName      string
+		ExpectedHasHandle bool
+		ExpectedHasSpout  bool
+	}{
+		{
+			Name:              "correct json is decoded correctly",
+			Body:              `{"name": "Brown Betty", "hasHandle": true, "hasSpout": false}`,
+			IsErr:             false,
+			ExpectedName:      "Brown Betty",
+			ExpectedHasHandle: true,
+			ExpectedHasSpout:  false,
+		},
+		{
+			Name:  "incorrect json is decoded, but empty",
+			Body:  `{"nom": "Brown Betty"}`,
+			IsErr: false,
+		},
+		{
+			Name:  "not json isn't decoded",
+			Body:  `yaml: yes`,
+			IsErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+
+			is := is.New(t)
+
+			// Create a dummy request to pass to our decoder.
+			r, err := newTestRequest("GET", "/teapot", strings.NewReader(tt.Body), "/:path")
+			is.NoErr(err)
+
+			// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
+			rr := httptest.NewRecorder()
+
+			type body struct {
+				Name      string `json:"name"`
+				HasHandle bool   `json:"hasHandle"`
+				HasSpout  bool   `json:"hasSpout"`
+			}
+
+			var teapot body
+			err = Decode(rr, r, &teapot)
+			is.Equal(err != nil, tt.IsErr) // decode exits as expected.
+
+			if !tt.IsErr {
+				// check teapot created correctly
+				is.Equal(teapot.Name, tt.ExpectedName)           // teapot name is as expected.
+				is.Equal(teapot.HasHandle, tt.ExpectedHasHandle) // teapot handle is as expected.
+				is.Equal(teapot.HasSpout, tt.ExpectedHasSpout)   // teapot spout is as expected.
+			}
+		})
+	}
+
 }
