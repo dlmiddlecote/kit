@@ -21,11 +21,11 @@ func newTestLogger(level zapcore.LevelEnabler) (*zap.SugaredLogger, *observer.Ob
 // newTestRequest creates a new *http.Request, that has the kit framework request details
 // inside the requests context. This request should be used for all tests to mimic the
 // real execution path.
-func newTestRequest(method, path string, body io.Reader) (*http.Request, error) {
+func newTestRequest(method, path string, body io.Reader, matchedPath string) (*http.Request, error) {
 	r, err := http.NewRequest(method, path, body)
 	if err != nil {
 		return nil, err
 	}
-	r = setDetails(r, "/:path", httprouter.Params{})
+	r = setDetails(r, matchedPath, httprouter.Params{})
 	return r, nil
 }

@@ -32,7 +32,7 @@ func MetricsMW(endpoints []Endpoint) Middleware {
 	prometheus.MustRegister(duration)
 
 	return func(next http.Handler) http.Handler {
-		var h http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				// Retrieve detail state of this request
 				d := getDetails(r)
@@ -49,7 +49,6 @@ func MetricsMW(endpoints []Endpoint) Middleware {
 			}()
 			// Call the wrapped handler
 			next.ServeHTTP(w, r)
-		}
-		return h
+		})
 	}
 }

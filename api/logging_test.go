@@ -32,7 +32,7 @@ func TestLogMW(t *testing.T) {
 	h = mw(h)
 
 	// Create a dummy request to pass to our handler.
-	r, err := newTestRequest("GET", "/status", nil)
+	r, err := newTestRequest("GET", "/status", nil, "/:path")
 	is.NoErr(err) // http request created ok.
 
 	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.

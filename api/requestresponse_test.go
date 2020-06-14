@@ -14,7 +14,7 @@ func TestProblemResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newTestRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -58,7 +58,7 @@ func TestProblemResponseWithExtras(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newTestRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -162,7 +162,7 @@ func TestNotFoundResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our not found response.
-	r, err := newTestRequest("GET", "/not-found", nil)
+	r, err := newTestRequest("GET", "/not-found", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -250,7 +250,7 @@ func TestErrorResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our error response.
-	r, err := newTestRequest("GET", "/error", nil)
+	r, err := newTestRequest("GET", "/error", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
