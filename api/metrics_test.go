@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/matryer/is"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -17,8 +18,11 @@ func TestMetricsMW(t *testing.T) {
 
 	is := is.New(t)
 
+	// Create prometheus registry
+	reg := prometheus.NewRegistry()
+
 	// Start a test server that serves the prometheus metrics endpoint.
-	s := httptest.NewServer(promhttp.Handler())
+	s := httptest.NewServer(promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 	defer s.Close()
 
 	// scrape is a function that will return the exposed prometheus metrics endpoint as a string.
@@ -59,7 +63,7 @@ func TestMetricsMW(t *testing.T) {
 	}
 
 	// Create the metrics middleware.
-	mw := MetricsMW(endpoints)
+	mw := MetricsMW(reg, endpoints)
 
 	// Wrap handler in metrics middleware.
 	h = mw(h)

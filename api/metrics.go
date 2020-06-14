@@ -10,7 +10,7 @@ import (
 
 // MetricsMW returns a middleware that implements counting + timing of requests
 // using a Prometheus Histogram
-func MetricsMW(endpoints []Endpoint) Middleware {
+func MetricsMW(reg prometheus.Registerer, endpoints []Endpoint) Middleware {
 	// Create Histogram that will observe request latency.
 	// This Histogram will also expose a 'count' metric that can be used
 	// to rate requests.
@@ -29,7 +29,7 @@ func MetricsMW(endpoints []Endpoint) Middleware {
 	}
 
 	// Register the Histogram to be exposed via the Prometheus metrics handler
-	prometheus.MustRegister(duration)
+	reg.MustRegister(duration)
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
