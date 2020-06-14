@@ -411,3 +411,29 @@ func TestRespond(t *testing.T) {
 		})
 	}
 }
+
+func TestRedirect(t *testing.T) {
+
+	is := is.New(t)
+
+	// Create a dummy request.
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
+	is.NoErr(err)
+
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
+	rr := httptest.NewRecorder()
+
+	// Invoke Redirect.
+	Redirect(rr, r, "https://example.com", http.StatusPermanentRedirect)
+
+	// Check that the status is set in request details.
+	d := getDetails(r)
+	is.True(d != nil) // details exists.
+	if d != nil {
+		is.Equal(d.StatusCode, http.StatusPermanentRedirect) // details contains correct status code.
+	}
+
+	// Check response is as expected.
+	is.Equal(rr.Code, http.StatusPermanentRedirect)              // response status is correct.
+	is.Equal(rr.Header().Get("Location"), "https://example.com") // redirect location header is set correctly.
+}
