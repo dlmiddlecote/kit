@@ -1,4 +1,7 @@
 # Kit
+![](https://github.com/dlmiddlecote/kit/workflows/Test/badge.svg)
+[![codecov](https://codecov.io/gh/dlmiddlecote/kit/branch/master/graph/badge.svg)](https://codecov.io/gh/dlmiddlecote/kit)
+[![Documentation](https://godoc.org/github.com/dlmiddlecote/kit?status.svg)](http://godoc.org/github.com/dlmiddlecote/kit)
 
 A collection of building blocks for Go apps 🧱.
 
