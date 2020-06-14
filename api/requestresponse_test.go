@@ -352,3 +352,62 @@ func TestDecode(t *testing.T) {
 	}
 
 }
+
+func TestRespond(t *testing.T) {
+
+	tests := []struct {
+		Name                string
+		Response            interface{}
+		Code                int
+		ExpectedCode        int
+		ExpectedContentType string
+		ExpectedBody        string
+	}{
+		{
+			Name:                "Empty body",
+			Response:            nil,
+			Code:                http.StatusAccepted,
+			ExpectedCode:        http.StatusAccepted,
+			ExpectedContentType: "",
+			ExpectedBody:        "",
+		},
+		{
+			Name:                "JSON Body",
+			Response:            map[string]int{"status": 200},
+			Code:                http.StatusOK,
+			ExpectedCode:        http.StatusOK,
+			ExpectedContentType: "application/json",
+			ExpectedBody:        `{"status":200}`,
+		},
+		{
+			Name:                "Non-JSON Marshallable Body",
+			Response:            func() {},
+			Code:                http.StatusOK,
+			ExpectedCode:        http.StatusInternalServerError,
+			ExpectedContentType: "application/problem+json",
+			ExpectedBody:        `{"type":"about:blank","title":"Internal Server Error","status":500}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+
+			is := is.New(t)
+
+			// Create a dummy request.
+			r, err := newTestRequest("GET", "/teapot", nil, "/:path")
+			is.NoErr(err)
+
+			// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
+			rr := httptest.NewRecorder()
+
+			// Invoke Respond.
+			Respond(rr, r, tt.Code, tt.Response)
+
+			// Check response is as expected.
+			is.Equal(rr.Code, tt.ExpectedCode)                                // response code is as expected.
+			is.Equal(rr.Header().Get("Content-Type"), tt.ExpectedContentType) // content-type is as expected.
+			is.Equal(rr.Body.String(), tt.ExpectedBody)                       // response body is as expected
+		})
+	}
+}
