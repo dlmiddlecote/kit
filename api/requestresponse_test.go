@@ -105,7 +105,7 @@ func TestProblemResponseWithFields(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -207,7 +207,7 @@ func TestNotFoundWithDetailResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our not found response.
-	r, err := newRequest("GET", "/not-found", nil)
+	r, err := newTestRequest("GET", "/not-found", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -385,7 +385,7 @@ func TestRespond(t *testing.T) {
 			Code:                http.StatusOK,
 			ExpectedCode:        http.StatusInternalServerError,
 			ExpectedContentType: "application/problem+json",
-			ExpectedBody:        `{"type":"about:blank","title":"Internal Server Error","status":500}`,
+			ExpectedBody:        `{"detail":"Internal Server Error","status":500,"title":"Internal Server Error","type":"about:blank"}`,
 		},
 	}
 
