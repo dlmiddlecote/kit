@@ -49,6 +49,7 @@ func Respond(w http.ResponseWriter, r *http.Request, code int, data interface{})
 
 	// Write the JSON body. This must be done last, otherwise we flush the response too quickly.
 	if len(jsonData) > 0 {
+		//nolint:errcheck
 		w.Write(jsonData)
 	}
 }
