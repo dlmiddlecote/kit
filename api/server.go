@@ -16,19 +16,47 @@ type server struct {
 
 // NewServer returns a HTTP server for accessing the the given API.
 func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
-	// Create our server, with default middlewares
+
+	// Create our server
 	s := server{
 		router: httprouter.New(),
 		logger: logger,
-		mw: []Middleware{
-			LogMW(logger),
-			MetricsMW(prometheus.DefaultRegisterer, a.Endpoints()),
-		},
+		mw:     make([]Middleware, 0), // Place for default middleware.
 	}
 
-	// Add all endpoints to the server's router
+	// Gather endpoints to register with metrics middleware.
+	// Some endpoints may not wish to be instrumented.
+	metricEndpoints := make([]Endpoint, 0)
 	for _, e := range a.Endpoints() {
-		s.handle(e.Method, e.Path, e.Handler, e.Middlewares...)
+		if !e.SuppressMetrics {
+			metricEndpoints = append(metricEndpoints, e)
+		}
+	}
+
+	// Create metrics middleware.
+	metricsmw := MetricsMW(prometheus.DefaultRegisterer, metricEndpoints)
+
+	// Create logging middleware.
+	logmw := LogMW(logger)
+
+	// Add all endpoints to the server's router.
+	for _, e := range a.Endpoints() {
+
+		// Gather list of middleware to wrap this endpoint in.
+		mws := make([]Middleware, 0)
+		if !e.SuppressMetrics {
+			// Add metrics middleware if metrics should not be suppressed.
+			mws = append(mws, metricsmw)
+		}
+		if !e.SuppressLogs {
+			// Add logging middleware if logs should not be suppressed.
+			mws = append(mws, logmw)
+		}
+		// Add all of the endpoint specific middleware.
+		mws = append(mws, e.Middlewares...)
+
+		// Register endpoint with the server.
+		s.handle(e.Method, e.Path, e.Handler, mws...)
 	}
 
 	// Convert our server into a http.Server

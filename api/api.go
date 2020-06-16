@@ -21,4 +21,8 @@ type Endpoint struct {
 	Handler http.Handler
 	// Any endpoint specific middlewares for this handler (i.e. access control)
 	Middlewares []Middleware
+	// Flag to suppress endpoint request/response information log line.
+	SuppressLogs bool
+	// Flag to suppress endpoint appearing in exposed Prometheus metrics.
+	SuppressMetrics bool
 }

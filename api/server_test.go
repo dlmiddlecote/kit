@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -19,7 +20,23 @@ type testAPI struct {
 
 func (a *testAPI) Endpoints() []Endpoint {
 	return []Endpoint{
-		{"GET", "/", a.handler(), []Middleware{}},
+		{
+			Method:  "GET",
+			Path:    "/",
+			Handler: a.handler(),
+		},
+		{
+			Method:       "GET",
+			Path:         "/no-logs",
+			Handler:      a.handler(),
+			SuppressLogs: true,
+		},
+		{
+			Method:          "GET",
+			Path:            "/no-metrics",
+			Handler:         a.handler(),
+			SuppressMetrics: true,
+		},
 	}
 }
 
@@ -48,12 +65,22 @@ func TestServer(t *testing.T) {
 		return string(buf)
 	}
 
+	// timeseriesMatches is a function that will return the count timeseries that matches the given labels
+	timeseriesMatches := func(method, path, status string) []string {
+		re := regexp.MustCompile(`http_request_duration_seconds_count{method="` + method + `",path="` + path + `",status="` + status + `"} ([0-9\.]+)`)
+		return re.FindStringSubmatch(scrape())
+	}
+
 	// timeseriesValue is a function that will return the value of the count timeseries for the given labels.
 	timeseriesValue := func(method, path, status string) float64 {
-		re := regexp.MustCompile(`http_request_duration_seconds_count{method="` + method + `",path="` + path + `",status="` + status + `"} ([0-9\.]+)`)
-		matches := re.FindStringSubmatch(scrape())
+		matches := timeseriesMatches(method, path, status)
 		f, _ := strconv.ParseFloat(matches[1], 64)
 		return f
+	}
+
+	// timeseriesMissing is a function that will check whether the count timeseries for the given labels is missing.
+	timeseriesMissing := func(method, path, status string) bool {
+		return len(timeseriesMatches(method, path, status)) == 0
 	}
 
 	// Create test api
@@ -66,40 +93,66 @@ func TestServer(t *testing.T) {
 	s := httptest.NewServer(srv.Handler)
 	defer s.Close()
 
-	// Check that all endpoints and statuses have been predeclared.
+	// Check that all endpoints and statuses have been predeclared, if they are expected to be.
 	for _, e := range a.Endpoints() {
 		for _, status := range []string{"2XX", "3XX", "4XX", "5XX"} {
-			is.Equal(timeseriesValue(e.Method, e.Path, status), float64(0)) // timeseries created, and is 0
+			if !e.SuppressMetrics {
+				is.Equal(timeseriesValue(e.Method, e.Path, status), float64(0)) // timeseries created, as not suppressed, and is 0.
+			} else {
+				is.True(timeseriesMissing(e.Method, e.Path, status)) // timeseries is not created, as suppressed.
+			}
 		}
 	}
 
-	// Call server
-	resp, _ := http.Get(s.URL)
-
-	// Get response body
-	buf, _ := ioutil.ReadAll(resp.Body)
-	body := string(buf)
-
-	// Check response
-	is.Equal(resp.StatusCode, http.StatusOK) // response status code is as expected.
-	is.Equal(body, `{"status":"ok"}`)        // response body is as expected.
-
-	// Check log line from the handler is logged.
-	is.Equal(logs.FilterMessage("from handler").Len(), 1) // log line from handler is logged.
-
-	// Check request log line is logged.
-	is.Equal(logs.FilterMessage("request").Len(), 1) // log line from handler is logged.
-
-	// Check metric is as expected.
-	is.Equal(timeseriesValue("GET", "/", "2XX"), float64(1)) // timeseries for request is now 1.
-
+	// Call all endpoints.
 	for _, e := range a.Endpoints() {
-		for _, status := range []string{"2XX", "3XX", "4XX", "5XX"} {
-			// Skip timeseries we've just checked.
-			if e.Method == "GET" && e.Path == "/" && status == "2XX" {
-				continue
+
+		// construct url.
+		u := fmt.Sprintf("%s%s", s.URL, e.Path)
+
+		// make request to endpoint.
+		resp, _ := http.Get(u)
+
+		// Read response body.
+		buf, _ := ioutil.ReadAll(resp.Body)
+		body := string(buf)
+
+		// Check response.
+		is.Equal(resp.StatusCode, http.StatusOK) // response status code is as expected.
+		is.Equal(body, `{"status":"ok"}`)        // response body is as expected.
+	}
+
+	// Check log line counts.
+	is.Equal(logs.FilterMessage("from handler").Len(), 3) // log line from handlers are logged.
+	is.Equal(logs.FilterMessage("request").Len(), 2)      // log line from desired requests are logged.
+
+	// Check correct endpoints are logged.
+	for _, ll := range logs.FilterMessage("request").All() {
+		matches := false
+		for _, p := range []string{"/", "/no-metrics"} {
+			if ll.ContextMap()["path"].(string) == p {
+				matches = true
+				break
 			}
-			is.Equal(timeseriesValue(e.Method, e.Path, status), float64(0)) // timeseries is still 0
+		}
+		is.True(matches) // request log line is from correct endpoint
+	}
+
+	// Check exposed metrics are as expected.
+	for _, e := range a.Endpoints() {
+		if !e.SuppressMetrics {
+			is.Equal(timeseriesValue("GET", e.Path, "2XX"), float64(1)) // timeseries for request is now 1, as not suppressed.
+		} else {
+			is.True(timeseriesMissing("GET", e.Path, "2XX")) // timeseries still not created, as suppressed.
+		}
+
+		// check the remaining timeseries haven't changed
+		for _, status := range []string{"3XX", "4XX", "5XX"} {
+			if !e.SuppressMetrics {
+				is.Equal(timeseriesValue(e.Method, e.Path, status), float64(0)) // timeseries is still 0.
+			} else {
+				is.True(timeseriesMissing(e.Method, e.Path, status)) // timeseries is not created, as suppressed.
+			}
 		}
 	}
 }
