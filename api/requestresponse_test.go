@@ -2,33 +2,23 @@ package api
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/matryer/is"
 )
-
-func newRequest(method, path string, body io.Reader) (*http.Request, error) {
-	r, err := http.NewRequest(method, path, body)
-	if err != nil {
-		return nil, err
-	}
-	r = setDetails(r, path, httprouter.Params{})
-	return r, nil
-}
 
 func TestProblemResponse(t *testing.T) {
 
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with a problem.
@@ -69,10 +59,10 @@ func TestProblemResponseWithExtras(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with a problem.
@@ -115,7 +105,7 @@ func TestProblemResponseWithFields(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our problem response.
-	r, err := newRequest("GET", "/teapot", nil)
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -173,10 +163,10 @@ func TestNotFoundResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our not found response.
-	r, err := newRequest("GET", "/not-found", nil)
+	r, err := newTestRequest("GET", "/not-found", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with not found.
@@ -217,7 +207,7 @@ func TestNotFoundWithDetailResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our not found response.
-	r, err := newRequest("GET", "/not-found", nil)
+	r, err := newTestRequest("GET", "/not-found", nil, "/:path")
 	is.NoErr(err)
 
 	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
@@ -261,10 +251,10 @@ func TestErrorResponse(t *testing.T) {
 	is := is.New(t)
 
 	// Create a dummy request to pass to our error response.
-	r, err := newRequest("GET", "/error", nil)
+	r, err := newTestRequest("GET", "/error", nil, "/:path")
 	is.NoErr(err)
 
-	// Create a response recorder, which satisfied http.ResponseWriter, to record the response.
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
 	rr := httptest.NewRecorder()
 
 	// Respond with an error.
@@ -298,4 +288,152 @@ func TestErrorResponse(t *testing.T) {
 	if d != nil {
 		is.Equal(d.StatusCode, http.StatusInternalServerError) // status is set on details.
 	}
+}
+
+func TestDecode(t *testing.T) {
+
+	tests := []struct {
+		Name              string
+		Body              string
+		IsErr             bool
+		ExpectedName      string
+		ExpectedHasHandle bool
+		ExpectedHasSpout  bool
+	}{
+		{
+			Name:              "correct json is decoded correctly",
+			Body:              `{"name": "Brown Betty", "hasHandle": true, "hasSpout": false}`,
+			IsErr:             false,
+			ExpectedName:      "Brown Betty",
+			ExpectedHasHandle: true,
+			ExpectedHasSpout:  false,
+		},
+		{
+			Name:  "incorrect json is decoded, but empty",
+			Body:  `{"nom": "Brown Betty"}`,
+			IsErr: false,
+		},
+		{
+			Name:  "not json isn't decoded",
+			Body:  `yaml: yes`,
+			IsErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+
+			is := is.New(t)
+
+			// Create a dummy request to pass to our decoder.
+			r, err := newTestRequest("GET", "/teapot", strings.NewReader(tt.Body), "/:path")
+			is.NoErr(err)
+
+			// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
+			rr := httptest.NewRecorder()
+
+			type body struct {
+				Name      string `json:"name"`
+				HasHandle bool   `json:"hasHandle"`
+				HasSpout  bool   `json:"hasSpout"`
+			}
+
+			var teapot body
+			err = Decode(rr, r, &teapot)
+			is.Equal(err != nil, tt.IsErr) // decode exits as expected.
+
+			if !tt.IsErr {
+				// check teapot created correctly
+				is.Equal(teapot.Name, tt.ExpectedName)           // teapot name is as expected.
+				is.Equal(teapot.HasHandle, tt.ExpectedHasHandle) // teapot handle is as expected.
+				is.Equal(teapot.HasSpout, tt.ExpectedHasSpout)   // teapot spout is as expected.
+			}
+		})
+	}
+
+}
+
+func TestRespond(t *testing.T) {
+
+	tests := []struct {
+		Name                string
+		Response            interface{}
+		Code                int
+		ExpectedCode        int
+		ExpectedContentType string
+		ExpectedBody        string
+	}{
+		{
+			Name:                "Empty body",
+			Response:            nil,
+			Code:                http.StatusAccepted,
+			ExpectedCode:        http.StatusAccepted,
+			ExpectedContentType: "",
+			ExpectedBody:        "",
+		},
+		{
+			Name:                "JSON Body",
+			Response:            map[string]int{"status": 200},
+			Code:                http.StatusOK,
+			ExpectedCode:        http.StatusOK,
+			ExpectedContentType: "application/json",
+			ExpectedBody:        `{"status":200}`,
+		},
+		{
+			Name:                "Non-JSON Marshallable Body",
+			Response:            func() {},
+			Code:                http.StatusOK,
+			ExpectedCode:        http.StatusInternalServerError,
+			ExpectedContentType: "application/problem+json",
+			ExpectedBody:        `{"detail":"Internal Server Error","status":500,"title":"Internal Server Error","type":"about:blank"}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Name, func(t *testing.T) {
+
+			is := is.New(t)
+
+			// Create a dummy request.
+			r, err := newTestRequest("GET", "/teapot", nil, "/:path")
+			is.NoErr(err)
+
+			// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
+			rr := httptest.NewRecorder()
+
+			// Invoke Respond.
+			Respond(rr, r, tt.Code, tt.Response)
+
+			// Check response is as expected.
+			is.Equal(rr.Code, tt.ExpectedCode)                                // response code is as expected.
+			is.Equal(rr.Header().Get("Content-Type"), tt.ExpectedContentType) // content-type is as expected.
+			is.Equal(rr.Body.String(), tt.ExpectedBody)                       // response body is as expected
+		})
+	}
+}
+
+func TestRedirect(t *testing.T) {
+
+	is := is.New(t)
+
+	// Create a dummy request.
+	r, err := newTestRequest("GET", "/teapot", nil, "/:path")
+	is.NoErr(err)
+
+	// Create a response recorder, which satisfies http.ResponseWriter, to record the response.
+	rr := httptest.NewRecorder()
+
+	// Invoke Redirect.
+	Redirect(rr, r, "https://example.com", http.StatusPermanentRedirect)
+
+	// Check that the status is set in request details.
+	d := getDetails(r)
+	is.True(d != nil) // details exists.
+	if d != nil {
+		is.Equal(d.StatusCode, http.StatusPermanentRedirect) // details contains correct status code.
+	}
+
+	// Check response is as expected.
+	is.Equal(rr.Code, http.StatusPermanentRedirect)              // response status is correct.
+	is.Equal(rr.Header().Get("Location"), "https://example.com") // redirect location header is set correctly.
 }

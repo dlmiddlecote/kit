@@ -11,7 +11,7 @@ import (
 // The middleware will log upon response.
 func LogMW(logger *zap.SugaredLogger) Middleware {
 	return func(next http.Handler) http.Handler {
-		var h http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				// Retrieve detail state of this request
 				d := getDetails(r)
@@ -25,12 +25,11 @@ func LogMW(logger *zap.SugaredLogger) Middleware {
 					"method", d.Method,
 					"path", r.URL.Path,
 					"status", d.StatusCode,
-					"duration", time.Since(d.Now),
+					"duration", time.Since(d.Now).String(),
 				)
 			}()
 			// Call the wrapped handler
 			next.ServeHTTP(w, r)
-		}
-		return h
+		})
 	}
 }

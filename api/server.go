@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +22,7 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 		logger: logger,
 		mw: []Middleware{
 			LogMW(logger),
-			MetricsMW(a.Endpoints()),
+			MetricsMW(prometheus.DefaultRegisterer, a.Endpoints()),
 		},
 	}
 

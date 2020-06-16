@@ -34,8 +34,8 @@ func Respond(w http.ResponseWriter, r *http.Request, code int, data interface{})
 		jsonData, err = json.Marshal(data)
 		if err != nil {
 			// There was an error Marshalling, so return a server error
-			jsonData = []byte(`{"msg": "Internal Server Error"}`)
-			code = http.StatusInternalServerError
+			Error(w, r, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
 	}
 

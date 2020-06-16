@@ -13,3 +13,6 @@
 
 # Dependency directories (don't want this as it's a library)
 vendor/
+
+# coverage
+coverage.txt
