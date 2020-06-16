@@ -1,12 +1,9 @@
 package api
 
 import (
-	"context"
 	"net/http"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/segmentio/ksuid"
 	"go.uber.org/zap"
 )
 
@@ -51,22 +48,12 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 
 	// Create the function to execute for each request
 	h := func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		ctx := r.Context()
 
-		// Set the context with the required details to process the request
-		d := Details{
-			Now:         time.Now(),
-			RequestID:   ksuid.New().String(), // TODO: Get from request to add some request tracing.
-			Method:      method,
-			RequestPath: path,
-			Params:      params,
-		}
-
-		// Add details to the context, so other functions can access them.
-		ctx = context.WithValue(ctx, KeyDetails, &d)
+		// Update request context with the required details to process the request
+		r = setDetails(r, path, params)
 
 		// Call the wrapped handler
-		handler.ServeHTTP(w, r.WithContext(ctx))
+		handler.ServeHTTP(w, r)
 	}
 
 	// Register the handler to the router
