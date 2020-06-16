@@ -108,16 +108,16 @@ func WithType(t string) ProblemExtra {
 }
 
 // WithDetail allows the detail field to be added to the problem response.
-func WithDetail(detail string) ProblemExtra {
+func WithDetail(d string) ProblemExtra {
 	return func(p *problem) {
-		p.fields["detail"] = detail
+		p.fields["detail"] = d
 	}
 }
 
 // WithInstance allows the instance field to be added to the problem response.
-func WithInstance(instance string) ProblemExtra {
+func WithInstance(i string) ProblemExtra {
 	return func(p *problem) {
-		p.fields["instance"] = instance
+		p.fields["instance"] = i
 	}
 }
 
