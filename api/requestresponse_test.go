@@ -47,7 +47,7 @@ func TestProblemResponse(t *testing.T) {
 	is.NoErr(err)                      // actual body is json.
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
-	d := getDetails(r)
+	d := GetDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
 		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
@@ -93,7 +93,7 @@ func TestProblemResponseWithExtras(t *testing.T) {
 	is.NoErr(err)                      // actual body is json.
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
-	d := getDetails(r)
+	d := GetDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
 		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
@@ -151,7 +151,7 @@ func TestProblemResponseWithFields(t *testing.T) {
 	is.NoErr(err)                      // actual body is json.
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
-	d := getDetails(r)
+	d := GetDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
 		is.Equal(d.StatusCode, http.StatusTeapot) // status is set on details.
@@ -195,7 +195,7 @@ func TestNotFoundResponse(t *testing.T) {
 	is.NoErr(err)                      // actual body is json.
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
-	d := getDetails(r)
+	d := GetDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
 		is.Equal(d.StatusCode, 404) // status is set on details.
@@ -239,7 +239,7 @@ func TestNotFoundWithDetailResponse(t *testing.T) {
 	is.NoErr(err)                      // actual body is json.
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
-	d := getDetails(r)
+	d := GetDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
 		is.Equal(d.StatusCode, 404) // status is set on details.
@@ -283,7 +283,7 @@ func TestErrorResponse(t *testing.T) {
 	is.NoErr(err)                      // actual body is json.
 	is.Equal(actualBody, expectedBody) // response body is correct.
 
-	d := getDetails(r)
+	d := GetDetails(r)
 	is.True(d != nil) // details exist.
 	if d != nil {
 		is.Equal(d.StatusCode, http.StatusInternalServerError) // status is set on details.
@@ -427,7 +427,7 @@ func TestRedirect(t *testing.T) {
 	Redirect(rr, r, "https://example.com", http.StatusPermanentRedirect)
 
 	// Check that the status is set in request details.
-	d := getDetails(r)
+	d := GetDetails(r)
 	is.True(d != nil) // details exists.
 	if d != nil {
 		is.Equal(d.StatusCode, http.StatusPermanentRedirect) // details contains correct status code.

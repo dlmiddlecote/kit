@@ -79,7 +79,7 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 	h := func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 
 		// Update request context with the required details to process the request
-		r = setDetails(r, path, params)
+		r = SetDetails(r, path, params)
 
 		// Call the wrapped handler
 		handler.ServeHTTP(w, r)

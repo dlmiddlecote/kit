@@ -26,6 +26,6 @@ func newTestRequest(method, path string, body io.Reader, matchedPath string) (*h
 	if err != nil {
 		return nil, err
 	}
-	r = setDetails(r, matchedPath, httprouter.Params{})
+	r = SetDetails(r, matchedPath, httprouter.Params{})
 	return r, nil
 }
