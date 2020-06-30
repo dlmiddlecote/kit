@@ -40,7 +40,7 @@ func Respond(w http.ResponseWriter, r *http.Request, code int, data interface{})
 	}
 
 	// Set status code value on request details so other middlewares can access it
-	if d := getDetails(r); d != nil {
+	if d := GetDetails(r); d != nil {
 		d.StatusCode = code
 	}
 
@@ -60,7 +60,7 @@ func Respond(w http.ResponseWriter, r *http.Request, code int, data interface{})
 func Redirect(w http.ResponseWriter, r *http.Request, url string, code int) {
 
 	// Set status code value on request details so other middlewares can access it
-	if d := getDetails(r); d != nil {
+	if d := GetDetails(r); d != nil {
 		d.StatusCode = code
 	}
 
