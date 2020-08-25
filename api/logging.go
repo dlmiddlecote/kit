@@ -33,3 +33,15 @@ func LogMW(logger *zap.SugaredLogger) Middleware {
 		})
 	}
 }
+
+// LoggerFromRequest returns a child logger of the given logger with predefined
+// fields. It should be used when logging from within a request handler, so that
+// those logs can be correlated.
+func LoggerFromRequest(r *http.Request, l *zap.SugaredLogger) *zap.SugaredLogger {
+	d := GetDetails(r)
+	if d == nil {
+		return l
+	}
+
+	return l.With("request_id", d.RequestID)
+}
