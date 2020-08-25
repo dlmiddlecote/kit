@@ -159,7 +159,7 @@ func Problem(w http.ResponseWriter, r *http.Request, title, detail string, code 
 // problem is a wrapper around a map that is used to collect all fields required for a problem response in
 // accordance to RFC 7807. It implements the json Marshaler interface to define a custom json marshalling.
 // swagger:model problem
-type problemSwaggerDefn struct {
+type problemSwaggerDefn struct { //nolint:deadcode
 	// A URI reference [RFC3986] that identifies the problem type.
 	// required: true
 	Type string `json:"type"`
