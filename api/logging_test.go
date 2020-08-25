@@ -70,3 +70,29 @@ func TestLogMW(t *testing.T) {
 	is.True(mwll.ContextMap()["request_id"].(string) != "")   // log line request_id field isn't empty.
 	is.True(mwll.ContextMap()["duration"].(string) != "")     // log line duration field isn't empty.
 }
+
+func TestLoggerFromRequest(t *testing.T) {
+
+	is := is.New(t)
+
+	// Create logger, and captured logs.
+	logger, logs := newTestLogger(zap.InfoLevel)
+
+	// Create a dummy request.
+	r, err := newTestRequest("GET", "/status", nil, "/:path")
+	is.NoErr(err) // http request created ok.
+
+	// Get new logger.
+	l := LoggerFromRequest(r, logger)
+
+	// Log with new logger.
+	l.Info("message")
+
+	// Check logs are as expected.
+	is.Equal(logs.Len(), 1) // 1 log line is logged.
+
+	// Check request id is in log line.
+	ll := logs.All()[0]
+	is.Equal(ll.Message, "message")                       // log line message is 'message'.
+	is.True(ll.ContextMap()["request_id"].(string) != "") // log line request_id field isn't empty.
+}
