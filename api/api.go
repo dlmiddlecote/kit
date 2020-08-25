@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 )
 
 // API defines a HTTP API that can be exposed using a server
@@ -12,7 +13,8 @@ type API interface {
 
 // Endpoint defines an endpoint of a HTTP API
 type Endpoint struct {
-	// The HTTP Method of this endpoint
+	// The HTTP Method of this endpoint. It is possible to register multiple
+	// methods by separating them by '+', i.e. GET+OPTIONS.
 	Method string
 	// The URL Path of this endpoint. Should follow the format for
 	// paths specified by https://github.com/julienschmidt/httprouter.
@@ -25,4 +27,9 @@ type Endpoint struct {
 	SuppressLogs bool
 	// Flag to suppress endpoint appearing in exposed Prometheus metrics.
 	SuppressMetrics bool
+}
+
+// Methods returns all methods we should register this endpoint for.
+func (e Endpoint) Methods() []string {
+	return strings.Split(e.Method, "+")
 }

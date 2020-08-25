@@ -55,8 +55,10 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 		// Add all of the endpoint specific middleware.
 		mws = append(mws, e.Middlewares...)
 
-		// Register endpoint with the server.
-		s.handle(e.Method, e.Path, e.Handler, mws...)
+		for _, method := range e.Methods() {
+			// Register endpoint with the server.
+			s.handle(method, e.Path, e.Handler, mws...)
+		}
 	}
 
 	// Convert our server into a http.Server
