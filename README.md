@@ -1,7 +1,7 @@
 # Kit
 [![Test](https://github.com/dlmiddlecote/kit/workflows/Test/badge.svg)](https://github.com/dlmiddlecote/kit/actions?query=workflow%3ATest)
 [![codecov](https://codecov.io/gh/dlmiddlecote/kit/branch/main/graph/badge.svg)](https://codecov.io/gh/dlmiddlecote/kit)
-[![Documentation](https://godoc.org/github.com/dlmiddlecote/kit?status.svg)](http://godoc.org/github.com/dlmiddlecote/kit)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/dlmiddlecote/kit)](https://pkg.go.dev/github.com/dlmiddlecote/kit)
 
 A collection of building blocks for Go apps 🧱.
 
