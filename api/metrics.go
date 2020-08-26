@@ -25,6 +25,10 @@ func MetricsMW(reg prometheus.Registerer, endpoints []Endpoint) Middleware {
 	for _, e := range endpoints {
 		for _, status := range []string{"2XX", "3XX", "4XX", "5XX"} {
 			duration.WithLabelValues(e.Method, e.Path, status)
+			// Also predeclare OPTIONS method if we have a CORS middleware.
+			if e.CorsMiddleware != nil {
+				duration.WithLabelValues("OPTIONS", e.Path, status)
+			}
 		}
 	}
 

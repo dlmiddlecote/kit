@@ -37,6 +37,12 @@ func (a *testAPI) Endpoints() []Endpoint {
 			Handler:         a.handler(),
 			SuppressMetrics: true,
 		},
+		{
+			Method:         "GET",
+			Path:           "/cors",
+			Handler:        a.handler(),
+			CorsMiddleware: DefaultCorsMW(),
+		},
 	}
 }
 
@@ -101,6 +107,10 @@ func TestServer(t *testing.T) {
 			} else {
 				is.True(timeseriesMissing(e.Method, e.Path, status)) // timeseries is not created, as suppressed.
 			}
+
+			if e.CorsMiddleware != nil {
+				is.Equal(timeseriesValue("OPTIONS", e.Path, status), float64(0)) // options timeseries created for cors middleware
+			}
 		}
 	}
 
@@ -120,16 +130,33 @@ func TestServer(t *testing.T) {
 		// Check response.
 		is.Equal(resp.StatusCode, http.StatusOK) // response status code is as expected.
 		is.Equal(body, `{"status":"ok"}`)        // response body is as expected.
+
+		// Check OPTIONS endpoint if there is a CorsMiddleware.
+		if e.CorsMiddleware != nil {
+			// create request.
+			r, err := http.NewRequest("OPTIONS", u, nil)
+			is.NoErr(err)
+
+			// Set required cors request headers.
+			r.Header.Set("Origin", "localhost")
+			r.Header.Set("Access-Control-Request-Method", "GET")
+
+			// make request to endpoint.
+			oresp, _ := http.DefaultClient.Do(r)
+
+			// Check we have a CORS header in the response.
+			is.Equal(oresp.Header.Get("Access-Control-Allow-Origin"), "*")
+		}
 	}
 
 	// Check log line counts.
-	is.Equal(logs.FilterMessage("from handler").Len(), 3) // log line from handlers are logged.
-	is.Equal(logs.FilterMessage("request").Len(), 2)      // log line from desired requests are logged.
+	is.Equal(logs.FilterMessage("from handler").Len(), 4)                                     // log line from handlers are logged.
+	is.Equal(logs.FilterMessage("request").FilterField(zap.String("method", "GET")).Len(), 3) // log line from desired requests are logged.
 
 	// Check correct endpoints are logged.
-	for _, ll := range logs.FilterMessage("request").All() {
+	for _, ll := range logs.FilterMessage("request").FilterField(zap.String("method", "GET")).All() {
 		matches := false
-		for _, p := range []string{"/", "/no-metrics"} {
+		for _, p := range []string{"/", "/no-metrics", "/cors"} {
 			if ll.ContextMap()["path"].(string) == p {
 				matches = true
 				break
@@ -146,12 +173,20 @@ func TestServer(t *testing.T) {
 			is.True(timeseriesMissing("GET", e.Path, "2XX")) // timeseries still not created, as suppressed.
 		}
 
+		if e.CorsMiddleware != nil {
+			is.Equal(timeseriesValue("OPTIONS", e.Path, "2XX"), float64(1)) // timeseries for request is now 1.
+		}
+
 		// check the remaining timeseries haven't changed
 		for _, status := range []string{"3XX", "4XX", "5XX"} {
 			if !e.SuppressMetrics {
 				is.Equal(timeseriesValue(e.Method, e.Path, status), float64(0)) // timeseries is still 0.
 			} else {
 				is.True(timeseriesMissing(e.Method, e.Path, status)) // timeseries is not created, as suppressed.
+			}
+
+			if e.CorsMiddleware != nil {
+				is.Equal(timeseriesValue("OPTIONS", e.Path, status), float64(0)) // timeseries is still 0.
 			}
 		}
 	}

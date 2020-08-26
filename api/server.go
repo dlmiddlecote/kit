@@ -42,6 +42,8 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 	// Add all endpoints to the server's router.
 	for _, e := range a.Endpoints() {
 
+		methods := []string{e.Method}
+
 		// Gather list of middleware to wrap this endpoint in.
 		mws := make([]Middleware, 0)
 		if !e.SuppressMetrics {
@@ -52,10 +54,17 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 			// Add logging middleware if logs should not be suppressed.
 			mws = append(mws, logmw)
 		}
+		if e.CorsMiddleware != nil {
+			// Add cors middleware.
+			mws = append(mws, Middleware(*e.CorsMiddleware))
+			// Add OPTIONS method to be registered.
+			methods = append(methods, "OPTIONS")
+		}
+
 		// Add all of the endpoint specific middleware.
 		mws = append(mws, e.Middlewares...)
 
-		for _, method := range e.Methods() {
+		for _, method := range methods {
 			// Register endpoint with the server.
 			s.handle(method, e.Path, e.Handler, mws...)
 		}
