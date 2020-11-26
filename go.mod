@@ -1,4 +1,4 @@
-module github.com/dlmiddlecote/kit/v1
+module github.com/dlmiddlecote/kit
 
 go 1.14
 
