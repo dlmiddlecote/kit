@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/segmentio/ksuid"
 )
 
@@ -21,12 +20,12 @@ type Details struct {
 	RequestID   string
 	Method      string
 	RequestPath string
-	Params      httprouter.Params
+	Params      map[string]string
 	StatusCode  int
 }
 
 // SetDetails adds the required setails into the given request's context. The returned request should then be used.
-func SetDetails(r *http.Request, path string, params httprouter.Params) *http.Request {
+func SetDetails(r *http.Request, path string, params map[string]string) *http.Request {
 
 	d := Details{
 		Now:         time.Now(),
@@ -57,5 +56,5 @@ func URLParam(r *http.Request, name string) string {
 	if d == nil {
 		return ""
 	}
-	return d.Params.ByName(name)
+	return d.Params[name]
 }

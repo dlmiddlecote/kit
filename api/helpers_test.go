@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
@@ -26,6 +25,6 @@ func newTestRequest(method, path string, body io.Reader, matchedPath string) (*h
 	if err != nil {
 		return nil, err
 	}
-	r = SetDetails(r, matchedPath, httprouter.Params{})
+	r = SetDetails(r, matchedPath, map[string]string{})
 	return r, nil
 }

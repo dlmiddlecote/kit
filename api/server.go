@@ -3,13 +3,13 @@ package api
 import (
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/dimfeld/httptreemux/v5"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
 
 type server struct {
-	router *httprouter.Router
+	router *httptreemux.TreeMux
 	logger *zap.SugaredLogger
 	mw     []Middleware
 }
@@ -19,7 +19,7 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 
 	// Create our server
 	s := server{
-		router: httprouter.New(),
+		router: httptreemux.New(),
 		logger: logger,
 		mw:     make([]Middleware, 0), // Place for default middleware.
 	}
@@ -87,7 +87,7 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 	handler = wrapMiddleware(s.mw, handler)
 
 	// Create the function to execute for each request
-	h := func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	h := func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 
 		// Update request context with the required details to process the request
 		r = SetDetails(r, path, params)
