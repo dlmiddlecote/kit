@@ -14,7 +14,7 @@ func LogMW(logger *zap.SugaredLogger) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				// Retrieve detail state of this request
-				d := GetDetails(r)
+				d := getDetails(r)
 				if d == nil {
 					// There's nothing more to do if we can't find the details.
 					return
@@ -38,7 +38,7 @@ func LogMW(logger *zap.SugaredLogger) Middleware {
 // fields. It should be used when logging from within a request handler, so that
 // those logs can be correlated.
 func LoggerFromRequest(r *http.Request, l *zap.SugaredLogger) *zap.SugaredLogger {
-	d := GetDetails(r)
+	d := getDetails(r)
 	if d == nil {
 		return l
 	}

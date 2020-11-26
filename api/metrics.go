@@ -39,7 +39,7 @@ func MetricsMW(reg prometheus.Registerer, endpoints []Endpoint) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				// Retrieve detail state of this request
-				d := GetDetails(r)
+				d := getDetails(r)
 				if d == nil {
 					// There's nothing more to do if we can't find the details.
 					return

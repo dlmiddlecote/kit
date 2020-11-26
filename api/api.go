@@ -15,7 +15,7 @@ type Endpoint struct {
 	// The HTTP Method of this endpoint.
 	Method string
 	// The URL Path of this endpoint. Should follow the format for
-	// paths specified by https://github.com/julienschmidt/httprouter.
+	// paths specified by https://github.com/dimfeld/httptreemux.
 	Path string
 	// The handler to invoke when a request for the given Method, Path is received
 	Handler http.Handler

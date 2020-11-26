@@ -32,7 +32,7 @@ func CorsMW(c *cors.Cors) *CorsMiddleware {
 
 			defer func() {
 				// Set status code value on request details so other middlewares can access it.
-				if d := GetDetails(r); d != nil {
+				if d := getDetails(r); d != nil {
 					d.StatusCode = scrw.statusCode
 				}
 			}()
