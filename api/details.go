@@ -27,9 +27,16 @@ type details struct {
 // SetDetails adds the required details into the given request's context. The returned request should then be used.
 func SetDetails(r *http.Request, path string, params map[string]string) *http.Request {
 
+	// Retrieve request id from header.
+	requestID := r.Header.Get("X-Request-ID")
+	if requestID == "" {
+		// Create request id if not found in header.
+		requestID = ksuid.New().String()
+	}
+
 	d := details{
 		Now:         time.Now(),
-		RequestID:   ksuid.New().String(), // TODO: Get from request to add some request tracing.
+		RequestID:   requestID,
 		Method:      r.Method,
 		RequestPath: path,
 		Params:      params,
