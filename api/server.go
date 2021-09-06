@@ -21,7 +21,11 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 	s := server{
 		router: httptreemux.New(),
 		logger: logger,
-		mw:     make([]Middleware, 0), // Place for default middleware.
+		mw:     make([]Middleware, 0),
+	}
+
+	for _, opt := range a.Options() {
+		opt(&s)
 	}
 
 	// Gather endpoints to register with metrics middleware.
@@ -103,4 +107,24 @@ func (s *server) handle(method, path string, handler http.Handler, mw ...Middlew
 // ServeHTTP implements http.Handler
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
+}
+
+type Option func(*server)
+
+func WithPanicHandler(ph func(w http.ResponseWriter, r *http.Request, err interface{})) Option {
+	return func(s *server) {
+		s.router.PanicHandler = ph
+	}
+}
+
+func WithNotFoundHandler(h func(w http.ResponseWriter, r *http.Request)) Option {
+	return func(s *server) {
+		s.router.NotFoundHandler = h
+	}
+}
+
+func WithDefaultMiddleware(mw []Middleware) Option {
+	return func(s *server) {
+		s.mw = append(s.mw, mw...)
+	}
 }
