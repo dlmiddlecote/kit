@@ -15,7 +15,7 @@ type server struct {
 }
 
 // NewServer returns a HTTP server for accessing the the given API.
-func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
+func NewServer(addr string, logger *zap.SugaredLogger, a API, opts ...Option) http.Server {
 
 	// Create our server
 	s := server{
@@ -24,7 +24,7 @@ func NewServer(addr string, logger *zap.SugaredLogger, a API) http.Server {
 		mw:     make([]Middleware, 0),
 	}
 
-	for _, opt := range a.Options() {
+	for _, opt := range opts {
 		opt(&s)
 	}
 
@@ -109,20 +109,24 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
+// Option is a function that can be passed to NewServer to modify the server.
 type Option func(*server)
 
+// WithPanicHandler sets the server's panic handler.
 func WithPanicHandler(ph func(w http.ResponseWriter, r *http.Request, err interface{})) Option {
 	return func(s *server) {
 		s.router.PanicHandler = ph
 	}
 }
 
+// WithNotFoundHandler sets the server's not found handler.
 func WithNotFoundHandler(h func(w http.ResponseWriter, r *http.Request)) Option {
 	return func(s *server) {
 		s.router.NotFoundHandler = h
 	}
 }
 
+// WithDefaultMiddleware adds middleware to every endpoint registered with the server.
 func WithDefaultMiddleware(mw []Middleware) Option {
 	return func(s *server) {
 		s.mw = append(s.mw, mw...)

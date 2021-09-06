@@ -8,7 +8,6 @@ import (
 type API interface {
 	// Endpoints must return all Endpoints of the HTTP API to register with a http router
 	Endpoints() []Endpoint
-	Options() []Option
 }
 
 // Endpoint defines an endpoint of a HTTP API
