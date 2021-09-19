@@ -12,7 +12,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go: [1.13.x, 1.14.x, 1.15.x]
+        go: [1.15.x, 1.16.x, 1.17.x]
         os: [ubuntu-latest, macos-latest]
       fail-fast: true
     runs-on: ${{ matrix.os }}
@@ -43,5 +43,5 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
-          version: v1.32
+          version: v1.42
           only-new-issues: true
